@@ -173,11 +173,11 @@ class Match(object):
 
 class Runner(object):
 
-    def __init__(self, rules, playbooks, tags, skip_list, exclude_paths):
+    def __init__(self, rules, playbook, tags, skip_list, exclude_paths):
         self.rules = rules
         self.playbooks = set()
-        for pb in playbooks:
-            self.playbooks.add((pb, 'playbook'))
+        self.playbooks.add((playbook, 'playbook'))
+        self.playbook_dir = os.path.dirname(playbook)
         self.tags = tags
         self.skip_list = skip_list
         self._update_exclude_paths(exclude_paths)
@@ -208,7 +208,7 @@ class Runner(object):
         visited = set()
         while (visited != self.playbooks):
             for arg in self.playbooks - visited:
-                for file in ansiblelint.utils.find_children(arg):
+                for file in ansiblelint.utils.find_children(arg, self.playbook_dir):
                     if self.is_excluded(file['path']):
                         continue
                     self.playbooks.add((file['path'], file['type']))
