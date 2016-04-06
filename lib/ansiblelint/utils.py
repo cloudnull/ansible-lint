@@ -114,7 +114,7 @@ def _playbook_items(pb_data):
         return [item for play in pb_data for item in play.items()]
 
 
-def find_children(playbook, playbook_dir):
+def find_children(playbook, playbook_dir, ignore_roles):
     if not os.path.exists(playbook[0]):
         return []
     results = []
@@ -125,7 +125,7 @@ def find_children(playbook, playbook_dir):
         raise SystemExit(str(e))
     items = _playbook_items(pb_data)
     for item in items:
-        for child in play_children(basedir, item, playbook[1], playbook_dir):
+        for child in play_children(basedir, item, playbook[1], playbook_dir, ignore_roles):
             if "$" in child['path'] or "{{" in child['path']:
                 continue
             valid_tokens = list()
@@ -141,7 +141,7 @@ def find_children(playbook, playbook_dir):
     return results
 
 
-def play_children(basedir, item, parent_type, playbook_dir):
+def play_children(basedir, item, parent_type, playbook_dir, ignore_roles):
     delegate_map = {
         'tasks': _taskshandlers_children,
         'pre_tasks': _taskshandlers_children,
@@ -151,6 +151,8 @@ def play_children(basedir, item, parent_type, playbook_dir):
         'dependencies': _roles_children,
         'handlers': _taskshandlers_children,
     }
+    if ignore_roles:
+        delegate_map['roles'] = lambda *args: []
     (k, v) = item
     if k in delegate_map:
         if v:
